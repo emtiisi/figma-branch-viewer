@@ -287,7 +287,21 @@
       font-weight: 800;
       letter-spacing: -1px;
       color: var(--text);
-      margin-bottom: 16px;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    .stale-bar .loading-subtitle {
+      display: none;
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .stale-bar.first-load .loading-subtitle {
+      display: block;
     }
 
     .stale-bar .loading-title em {
@@ -301,12 +315,13 @@
     .stale-bar.first-load {
       flex-direction: column;
       align-items: center;
-      max-width: 480px;
+      width: 40%;
+      max-width: none;
       margin: 0 auto;
-      padding: 32px;
-      border-radius: 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
+      padding: 32px 0;
+      border-radius: 0;
+      background: none;
+      border: none;
       position: fixed;
       top: 50%;
       left: 50%;
@@ -824,7 +839,14 @@
     .empty-state {
       display: none;
       max-width: 380px;
-      margin: 60px auto;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+    }
+
+    .empty-state .empty-card {
       padding: 32px;
       background: var(--surface);
       border: 1px solid var(--border);
@@ -963,6 +985,7 @@
     <div class="stale-bar" id="staleBar">
       <div class="progress-wrap">
         <div class="loading-title" id="loadingTitle"></div>
+        <div class="loading-subtitle" id="loadingSubtitle">yükleniyor</div>
         <div class="progress-top">
           <span id="staleText">Güncel veriler yükleniyor...</span>
           <span class="progress-pct" id="progressPct">0%</span>
@@ -976,23 +999,25 @@
     <div class="cards-grid" id="cards"></div>
     <div class="no-results" id="noResults">Sonuç bulunamadı</div>
     <div class="empty-state" id="emptyState">
-      <h2>Figma <em>Branch Viewer</em></h2>
-      <div class="subtitle">Başlamak için token gir ve proje seç</div>
-      <div class="field">
-        <label>FIGMA API TOKEN</label>
-        <input type="password" id="initToken" placeholder="figd_..." />
+      <div class="empty-card">
+        <h2>Figma <em>Branch Viewer</em></h2>
+        <div class="subtitle">Başlamak için token gir ve proje seç</div>
+        <div class="field">
+          <label>FIGMA API TOKEN</label>
+          <input type="password" id="initToken" placeholder="figd_..." />
+        </div>
+        <div class="field">
+          <label>PROJE SEÇİMİ</label>
+          <select id="initProjectId">
+            <option value="209495921">Kripto</option>
+            <option value="277372227">Hisse</option>
+            <option value="205113374">Global</option>
+          </select>
+        </div>
+        <button class="start-btn" onclick="initStart()">Başla</button>
       </div>
-      <div class="field">
-        <label>PROJE SEÇİMİ</label>
-        <select id="initProjectId">
-          <option value="209495921">Kripto</option>
-          <option value="277372227">Hisse</option>
-          <option value="205113374">Global</option>
-        </select>
-      </div>
-      <button class="start-btn" onclick="initStart()">Başla</button>
+      <div class="note">&#128274; Token sadece tarayıcında çalışır, hiçbir sunucuya gönderilmez</div>
     </div>
-    <div class="note">&#128274; Token sadece tarayıcında çalışır, hiçbir sunucuya gönderilmez</div>
   </div>
 
   <script>
@@ -1116,8 +1141,9 @@
         const bar = document.getElementById('staleBar');
         bar.classList.add('visible', 'first-load');
         const projLabel = PROJECT_MAP[document.getElementById('projectId').value] || 'Proje';
-        document.getElementById('loadingTitle').innerHTML = projLabel + ` <em>Branch'leri yükleniyor</em>`;
+        document.getElementById('loadingTitle').innerHTML = projLabel + ` <em>Branch'leri</em>`;
         document.getElementById('staleText').textContent = 'Başlatılıyor...';
+        document.querySelector('.note').style.display = 'none';
       }
       await doFetch(token, teamId);
     }
@@ -1208,6 +1234,7 @@
       document.getElementById('emptyState').classList.remove('visible');
       document.getElementById('resultsHeader').classList.add('visible');
       document.getElementById('toolbar').classList.add('visible');
+      document.querySelector('.note').style.display = '';
     }
 
     function fmtDate(iso) {
