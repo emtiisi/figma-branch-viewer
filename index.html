@@ -302,11 +302,16 @@
       flex-direction: column;
       align-items: center;
       max-width: 480px;
-      margin: 60px auto 16px;
+      margin: 0 auto;
       padding: 32px;
       border-radius: 16px;
       background: var(--surface);
       border: 1px solid var(--border);
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
     }
 
     .stale-bar.first-load .loading-title {
@@ -1111,7 +1116,7 @@
         const bar = document.getElementById('staleBar');
         bar.classList.add('visible', 'first-load');
         const projLabel = PROJECT_MAP[document.getElementById('projectId').value] || 'Proje';
-        document.getElementById('loadingTitle').innerHTML = projLabel + ' <em>dosyaları yükleniyor</em>';
+        document.getElementById('loadingTitle').innerHTML = projLabel + ` <em>Branch'leri yükleniyor</em>`;
         document.getElementById('staleText').textContent = 'Başlatılıyor...';
       }
       await doFetch(token, teamId);
