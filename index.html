@@ -280,6 +280,14 @@
       color: #9090cc;
     }
 
+    .stale-bar .loading-title {
+      font-family: var(--sans);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
     .stale-bar.visible {
       display: flex;
     }
@@ -920,6 +928,7 @@
 
     <div class="stale-bar" id="staleBar">
       <div class="progress-wrap">
+        <div class="loading-title" id="loadingTitle"></div>
         <div class="progress-top">
           <span id="staleText">Güncel veriler yükleniyor...</span>
           <span class="progress-pct" id="progressPct">0%</span>
@@ -1071,7 +1080,9 @@
         document.getElementById('cards').innerHTML = '';
         document.getElementById('emptyState').classList.remove('visible');
         document.getElementById('staleBar').classList.add('visible');
-        document.getElementById('staleText').textContent = 'Yükleniyor...';
+        const projLabel = PROJECT_MAP[document.getElementById('projectId').value] || 'Proje';
+        document.getElementById('loadingTitle').textContent = projLabel + ' dosyaları yükleniyor';
+        document.getElementById('staleText').textContent = 'Başlatılıyor...';
       }
       await doFetch(token, teamId);
     }
