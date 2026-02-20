@@ -642,9 +642,9 @@
       overflow: hidden;
       transition: border-color 0.2s;
       animation: fadeUp 0.3s ease forwards;
-      opacity: 0;
       display: flex;
       flex-direction: column;
+      animation: fadeUp 0.3s ease forwards;
     }
 
     @keyframes fadeUp {
@@ -654,13 +654,13 @@
       }
 
       to {
-        opacity: 1;
+        opacity: var(--card-opacity, 1);
         transform: translateY(0)
       }
     }
 
     .file-card.no-branch {
-      opacity: 0.25;
+      --card-opacity: 0.25;
     }
 
     .file-card.no-branch:hover {
