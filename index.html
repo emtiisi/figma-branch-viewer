@@ -659,6 +659,37 @@
       }
     }
 
+    .file-card.no-branch {
+      opacity: 0.45;
+    }
+
+    .file-card.no-branch:hover {
+      opacity: 0.7;
+    }
+
+    .cards-separator {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 0;
+    }
+
+    .cards-separator::before,
+    .cards-separator::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .cards-separator span {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
     .file-card:hover {
       border-color: rgba(108, 99, 255, 0.25);
     }
@@ -1260,10 +1291,21 @@
       const container = document.getElementById('cards');
       container.classList.remove('stale');
       container.innerHTML = '';
+      let separatorAdded = false;
       items.forEach((item, i) => {
         const has = item.branches.length > 0;
+        if (!has && !separatorAdded && !hideEmpty) {
+          const hasBranched = items.some(it => it.branches.length > 0);
+          if (hasBranched) {
+            const sep = document.createElement('div');
+            sep.className = 'cards-separator';
+            sep.innerHTML = '<span>branch yok</span>';
+            container.appendChild(sep);
+          }
+          separatorAdded = true;
+        }
         const card = document.createElement('div');
-        card.className = 'file-card' + (!has && hideEmpty ? ' hidden' : '');
+        card.className = 'file-card' + (!has && hideEmpty ? ' hidden' : '') + (!has ? ' no-branch' : '');
         card.style.animationDelay = (i * 0.03) + 's';
         const fileUrl = `https://www.figma.com/design/${item.fileKey}/`;
 
