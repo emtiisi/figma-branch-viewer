@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Figma Branch Viewer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap');
+
+    :root {
+      --bg: #07080f;
+      --surface: #0e0f1a;
+      --surface2: #13141f;
+      --border: #1a1b2e;
+      --accent: #6c63ff;
+      --accent2: #ff6584;
+      --green: #43e97b;
+      --text: #e2e2f0;
+      --muted: #52536e;
+      --mono: 'DM Mono', monospace;
+      --sans: 'Syne', sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+    }
+
+    .grid {
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(rgba(108, 99, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(108, 99, 255, 0.03) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+    }
+
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(80px);
+    }
+
+    .orb1 {
+      width: 500px;
+      height: 500px;
+      background: rgba(108, 99, 255, 0.07);
+      top: -150px;
+      right: -100px;
+    }
+
+    .orb2 {
+      width: 400px;
+      height: 400px;
+      background: rgba(255, 101, 132, 0.05);
+      bottom: -100px;
+      left: -100px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* SETTINGS */
+    .settings-wrap {
+      position: relative;
+    }
+
+    .settings-btn {
+      height: 28px;
+      padding: 0 10px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      transition: all 0.2s;
+    }
+
+    .settings-btn:hover {
+      border-color: rgba(108, 99, 255, 0.4);
+      color: var(--accent);
+    }
+
+    .settings-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(108, 99, 255, 0.1);
+    }
+
+    .settings-btn svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    .dropdown {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      width: 320px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      z-index: 100;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+      display: none;
+      animation: dropIn 0.18s ease;
+    }
+
+    .dropdown.open {
+      display: block;
+    }
+
+    @keyframes dropIn {
+      from {
+        opacity: 0;
+        transform: translateY(-8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .dropdown h3 {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-family: var(--mono);
+    }
+
+    .field {
+      margin-bottom: 12px;
+    }
+
+    .field label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      margin-bottom: 5px;
+      letter-spacing: 0.5px;
+    }
+
+    .field .hint {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: #2a2b40;
+      margin-top: 4px;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: rgba(108, 99, 255, 0.5);
+    }
+
+    .field input::placeholder {
+      color: #252535;
+    }
+
+    .field select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6' fill='%2352536e'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 30px;
+    }
+
+    .field select option {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .dropdown-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .dd-btn {
+      padding: 9px;
+      border-radius: 8px;
+      font-family: var(--mono);
+      font-size: 11px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .dd-btn.primary {
+      background: linear-gradient(135deg, var(--accent), #4a3fd4);
+      color: #fff;
+      border: none;
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .dd-btn.primary:hover {
+      opacity: 0.9;
+    }
+
+    .dd-btn.secondary {
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .dd-btn.secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .dd-btn.danger {
+      background: transparent;
+      color: #ff6584;
+      border-color: rgba(255, 101, 132, 0.3);
+    }
+
+    .dd-btn.danger:hover {
+      background: rgba(255, 101, 132, 0.08);
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 14px 0;
+    }
+
+    /* STATUS */
+    .stale-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-family: var(--mono);
+      font-size: 12px;
+      margin-bottom: 16px;
+      background: rgba(108, 99, 255, 0.08);
+      border: 1px solid rgba(108, 99, 255, 0.2);
+      color: #9090cc;
+    }
+
+    .stale-bar.visible {
+      display: flex;
+    }
+
+    .stale-bar .progress-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .stale-bar .progress-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .stale-bar .progress-pct {
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .stale-bar .progress-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(108, 99, 255, 0.15);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .stale-bar .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), #a78bfa);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .status {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 16px;
+      border-radius: 10px;
+      font-family: var(--mono);
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+
+    .status.error {
+      display: flex;
+      background: rgba(255, 101, 132, 0.1);
+      border: 1px solid rgba(255, 101, 132, 0.3);
+      color: var(--accent2);
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* HEADER */
+    .results-header {
+      margin-bottom: 24px;
+      display: none;
+    }
+
+    .results-header.visible {
+      display: block;
+    }
+
+    .breadcrumb {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .breadcrumb span {
+      color: var(--accent);
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    h1 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .meta {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 4px 11px;
+      border-radius: 20px;
+    }
+
+    .badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    .badge.total {
+      color: var(--accent);
+      border-color: rgba(108, 99, 255, 0.3);
+    }
+
+    .meta-right {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .last-updated {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .icon-btn {
+      height: 28px;
+      padding: 0 10px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+      border-color: rgba(108, 99, 255, 0.4);
+      color: var(--accent);
+    }
+
+    .icon-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(108, 99, 255, 0.1);
+    }
+
+    /* TOOLBAR */
+    .toolbar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .toolbar.visible {
+      display: flex;
+    }
+
+    .search-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-wrap input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 16px 10px 38px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-wrap input:focus {
+      border-color: rgba(108, 99, 255, 0.5);
+    }
+
+    .search-wrap input::placeholder {
+      color: var(--muted);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .toggle-btn {
+      height: 36px;
+      padding: 0 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .toggle-btn:hover {
+      border-color: rgba(108, 99, 255, 0.3);
+      color: var(--text);
+    }
+
+    .toggle-btn.on {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(108, 99, 255, 0.08);
+    }
+
+    .toggle-btn .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 1.5px solid currentColor;
+      display: inline-block;
+      position: relative;
+    }
+
+    .toggle-btn.on .dot {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .toggle-btn.on .dot::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      background: rgba(108, 99, 255, 0.3);
+    }
+
+    /* GRID */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      transition: opacity 0.3s, filter 0.3s;
+    }
+
+    .cards-grid.stale {
+      opacity: 0.3;
+      filter: grayscale(0.5);
+      pointer-events: none;
+    }
+
+    @media(max-width:700px) {
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media(max-width:960px) and (min-width:701px) {
+      .cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* FILE CARD — grid style */
+    .file-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+      animation: fadeUp 0.3s ease forwards;
+      opacity: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .file-card:hover {
+      border-color: rgba(108, 99, 255, 0.25);
+    }
+
+    .file-card.hidden {
+      display: none;
+    }
+
+    .file-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 14px 16px 12px;
+      cursor: pointer;
+      user-select: none;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .file-header-left {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .file-name {
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+
+    .file-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .branch-pill {
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .branch-pill.has {
+      background: rgba(67, 233, 123, 0.12);
+      color: var(--green);
+      border: 1px solid rgba(67, 233, 123, 0.25);
+    }
+
+    .branch-pill.none {
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .file-link {
+      color: var(--muted);
+      text-decoration: none;
+      padding: 3px 5px;
+      border-radius: 5px;
+      transition: color 0.15s, background 0.15s;
+      flex-shrink: 0;
+      display: flex;
+    }
+
+    .file-link:hover {
+      color: var(--accent);
+      background: rgba(108, 99, 255, 0.1);
+    }
+
+    .file-link svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    .branches-list {
+      padding: 10px 12px;
+      flex: 1;
+    }
+
+    .branch-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      margin-bottom: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .branch-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .branch-item:hover {
+      border-color: rgba(108, 99, 255, 0.3);
+      background: rgba(108, 99, 255, 0.05);
+    }
+
+    .branch-icon {
+      font-size: 11px;
+      flex-shrink: 0;
+      color: var(--accent);
+    }
+
+    .branch-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .branch-name {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: #b0aaff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .branch-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .branch-id {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    .branch-date {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      opacity: 0.6;
+    }
+
+    .branch-date.old {
+      color: #ff9a3c;
+      opacity: 1;
+    }
+
+    .branch-link {
+      display: flex;
+      align-items: center;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 3px 5px;
+      border-radius: 5px;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .branch-link:hover {
+      color: var(--accent);
+      background: rgba(108, 99, 255, 0.1);
+    }
+
+    .branch-link svg {
+      width: 11px;
+      height: 11px;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 50px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 13px;
+      display: none;
+    }
+
+    .empty-state {
+      display: none;
+      max-width: 380px;
+      margin: 60px auto;
+      padding: 32px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .empty-state.visible {
+      display: block;
+    }
+
+    .empty-state h2 {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+    }
+
+    .empty-state h2 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .empty-state .subtitle {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .empty-state .field {
+      margin-bottom: 14px;
+    }
+
+    .empty-state .start-btn {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), #4a3fd4);
+      color: #fff;
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-top: 4px;
+    }
+
+    .empty-state .start-btn:hover {
+      opacity: 0.9;
+    }
+
+    .note {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 28px;
+      line-height: 1.7;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="grid"></div>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="container">
+
+    <div class="status" id="status"><span id="statusText"></span></div>
+
+    <div class="results-header" id="resultsHeader">
+      <div class="breadcrumb">Figma / <span id="teamName">Workspace</span> / <span id="projectName">tüm projeler</span>
+        / branches</div>
+      <h1 id="pageTitle">Kripto <em>Branch'ler</em></h1>
+      <div class="meta">
+        <div class="badge">
+          <div class="dot"></div><span id="statBranches">0</span> aktif branch
+        </div>
+        <div class="badge total"><span id="statFiles">0</span> dosya &middot; <span id="statProjects">0</span> proje
+        </div>
+        <span class="last-updated" id="lastUpdated"></span>
+        <div class="meta-right">
+          <button class="icon-btn" onclick="startFetch()">&#8635; Yenile</button>
+          <div class="settings-wrap" id="settingsWrap">
+            <button class="settings-btn" id="settingsBtn" onclick="toggleDropdown()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+              Ayarlar
+            </button>
+            <div class="dropdown" id="dropdown">
+              <h3>Bağlantı Ayarları</h3>
+              <div class="field">
+                <label>FIGMA API TOKEN</label>
+                <input type="password" id="token" placeholder="figd_..." />
+              </div>
+              <input type="hidden" id="teamId" value="1392498478" />
+              <div class="field">
+                <label>PROJE SEÇİMİ</label>
+                <select id="projectId">
+                  <option value="209495921">Kripto</option>
+                  <option value="277372227">Hisse</option>
+                  <option value="205113374">Global</option>
+                </select>
+              </div>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-actions">
+                <button class="dd-btn primary" onclick="saveAndFetch()">Kaydet &amp; Getir</button>
+                <button class="dd-btn secondary" onclick="saveSettings()">&#128190; Kaydet</button>
+                <button class="dd-btn danger" onclick="clearSettings()">&#10005; Temizle</button>
+                <button class="dd-btn secondary" onclick="closeDropdown()">Kapat</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar" id="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">&#9906;</span>
+        <input type="text" id="search" placeholder="branch veya dosya ara..." oninput="filterCards()" />
+      </div>
+      <button class="toggle-btn" id="hideEmptyBtn" onclick="toggleHideEmpty()">
+        <span class="dot"></span> Branch olmayanları gizle
+      </button>
+    </div>
+
+    <div class="stale-bar" id="staleBar">
+      <div class="progress-wrap">
+        <div class="progress-top">
+          <span id="staleText">Güncel veriler yükleniyor...</span>
+          <span class="progress-pct" id="progressPct">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cards-grid" id="cards"></div>
+    <div class="no-results" id="noResults">Sonuç bulunamadı</div>
+    <div class="empty-state" id="emptyState">
+      <h2>Figma <em>Branch Viewer</em></h2>
+      <div class="subtitle">Başlamak için token gir ve proje seç</div>
+      <div class="field">
+        <label>FIGMA API TOKEN</label>
+        <input type="password" id="initToken" placeholder="figd_..." />
+      </div>
+      <div class="field">
+        <label>PROJE SEÇİMİ</label>
+        <select id="initProjectId">
+          <option value="209495921">Kripto</option>
+          <option value="277372227">Hisse</option>
+          <option value="205113374">Global</option>
+        </select>
+      </div>
+      <button class="start-btn" onclick="initStart()">Başla</button>
+    </div>
+    <div class="note">&#128274; Token sadece tarayıcında çalışır, hiçbir sunucuya gönderilmez</div>
+  </div>
+
+  <script>
+    const CACHE_KEY = 'figma_cache';
+    const SETTINGS_KEY = 'figma_settings';
+    const PROJECT_MAP = { '209495921': 'Kripto', '277372227': 'Hisse', '205113374': 'Global' };
+    let allData = [];
+    let isFetching = false;
+    let hideEmpty = false;
+    let savedProjectId = '209495921';
+
+    function onProjectChange() {
+      const sel = document.getElementById('projectId').value;
+      savedProjectId = sel;
+      const label = PROJECT_MAP[sel] || 'Branch';
+      document.getElementById('pageTitle').innerHTML = `${label} <em>Branch'ler</em>`;
+      document.title = `${label} Branch Viewer`;
+      document.getElementById('cards').classList.remove('stale');
+    }
+
+    function initStart() {
+      const token = document.getElementById('initToken').value.trim();
+      if (!token) { showError('Token gerekli!'); return; }
+      const projectId = document.getElementById('initProjectId').value;
+      // Sync to settings dropdown
+      document.getElementById('token').value = token;
+      document.getElementById('projectId').value = projectId;
+      saveSettings();
+      startFetch();
+    }
+
+    const extIcon = `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 2H2v8h8V7M7 1h4m0 0v4m0-4L5.5 6.5"/></svg>`;
+
+    // Dropdown
+    function toggleDropdown() {
+      const dd = document.getElementById('dropdown');
+      const btn = document.getElementById('settingsBtn');
+      const isOpen = dd.classList.contains('open');
+      dd.classList.toggle('open', !isOpen);
+      btn.classList.toggle('active', !isOpen);
+    }
+    function closeDropdown() {
+      document.getElementById('dropdown').classList.remove('open');
+      document.getElementById('settingsBtn').classList.remove('active');
+    }
+    document.addEventListener('click', e => {
+      if (!document.getElementById('settingsWrap').contains(e.target)) closeDropdown();
+    });
+
+    function toggleHideEmpty() {
+      hideEmpty = !hideEmpty;
+      document.getElementById('hideEmptyBtn').classList.toggle('on', hideEmpty);
+      filterCards();
+    }
+
+    function saveSettings() {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+        token: document.getElementById('token').value,
+        projectId: document.getElementById('projectId').value,
+      }));
+      onProjectChange();
+    }
+    function saveAndFetch() {
+      saveSettings();
+      closeDropdown();
+      document.getElementById('cards').classList.add('stale');
+      startFetch();
+    }
+    function clearSettings() {
+      localStorage.removeItem(SETTINGS_KEY);
+      localStorage.removeItem(CACHE_KEY);
+      document.getElementById('token').value = '';
+      document.getElementById('projectId').selectedIndex = 0;
+      allData = [];
+      document.getElementById('resultsHeader').classList.remove('visible');
+      document.getElementById('toolbar').classList.remove('visible');
+      document.getElementById('cards').innerHTML = '';
+      document.getElementById('emptyState').classList.add('visible');
+      onProjectChange();
+      closeDropdown();
+    }
+
+    window.onload = () => {
+      const s = localStorage.getItem(SETTINGS_KEY);
+      if (s) {
+        const { token, projectId } = JSON.parse(s);
+        if (token) document.getElementById('token').value = token;
+        if (projectId) document.getElementById('projectId').value = projectId;
+      }
+      onProjectChange();
+      const cache = localStorage.getItem(CACHE_KEY);
+      if (cache) {
+        const { data, meta, savedAt } = JSON.parse(cache);
+        allData = data;
+        applyMeta(meta);
+        render(allData);
+        showResults();
+        document.getElementById('lastUpdated').textContent = 'önbellek: ' + timeAgo(savedAt);
+        const token = document.getElementById('token').value.trim();
+        const teamId = document.getElementById('teamId').value.trim();
+        if (token && teamId) fetchInBackground();
+      } else {
+        const token = document.getElementById('token').value.trim();
+        const teamId = document.getElementById('teamId').value.trim();
+        if (token && teamId) startFetch();
+        else document.getElementById('emptyState').classList.add('visible');
+      }
+    };
+
+    async function startFetch() {
+      if (isFetching) return;
+      const token = document.getElementById('token').value.trim();
+      const teamId = document.getElementById('teamId').value;
+      if (!token) { showError('Token gerekli!'); return; }
+      const hasCache = allData.length > 0;
+      if (!hasCache) {
+        document.getElementById('resultsHeader').classList.remove('visible');
+        document.getElementById('toolbar').classList.remove('visible');
+        document.getElementById('cards').innerHTML = '';
+        document.getElementById('emptyState').classList.remove('visible');
+        document.getElementById('staleBar').classList.add('visible');
+        document.getElementById('staleText').textContent = 'Yükleniyor...';
+      }
+      await doFetch(token, teamId);
+    }
+
+    async function fetchInBackground() {
+      if (isFetching) return;
+      const token = document.getElementById('token').value.trim();
+      const teamId = document.getElementById('teamId').value.trim();
+      if (!token || !teamId) return;
+      await doFetch(token, teamId);
+    }
+
+    async function doFetch(token, teamId) {
+      isFetching = true;
+      const projectId = document.getElementById('projectId').value.trim();
+      const h = { 'X-Figma-Token': token };
+      document.getElementById('staleBar').classList.add('visible');
+      updateProgress(0, 'Projeler alınıyor...');
+      try {
+        let projects = [];
+        if (projectId) {
+          projects = [{ id: projectId, name: 'Proje ' + projectId }];
+          document.getElementById('projectName').textContent = projectId;
+        } else {
+          const pr = await fetch(`https://api.figma.com/v1/teams/${teamId}/projects`, { headers: h });
+          if (!pr.ok) throw new Error(`Hata ${pr.status} — Token veya Team ID hatalı`);
+          const pd = await pr.json();
+          projects = pd.projects || [];
+          document.getElementById('teamName').textContent = pd.name || 'Workspace';
+          document.getElementById('projectName').textContent = 'tüm projeler';
+        }
+        // Phase 1: Collect all files
+        updateProgress(5, 'Dosya listesi alınıyor...');
+        const allFiles = [];
+        for (let pi = 0; pi < projects.length; pi++) {
+          const project = projects[pi];
+          const fr = await fetch(`https://api.figma.com/v1/projects/${project.id}/files`, { headers: h });
+          if (!fr.ok) throw new Error(`Proje dosyaları alınamadı (${fr.status})`);
+          const fd = await fr.json();
+          if (projectId && fd.name) document.getElementById('projectName').textContent = fd.name;
+          const files = fd.files || [];
+          files.forEach(f => allFiles.push({ ...f, projectName: project.name }));
+        }
+        // Phase 2: Fetch branches with progress
+        const newData = [];
+        let totalBranches = 0;
+        for (let fi = 0; fi < allFiles.length; fi++) {
+          const file = allFiles[fi];
+          const pct = Math.round(10 + (fi / allFiles.length) * 90);
+          updateProgress(pct, `${file.name} (${fi + 1}/${allFiles.length})`);
+          const br = await fetch(`https://api.figma.com/v1/files/${file.key}?depth=1&branch_data=true`, { headers: h });
+          const bd = await br.json();
+          const branches = (bd.branches || []).map(b => ({ name: b.name, key: b.key, modified: b.last_modified }));
+          totalBranches += branches.length;
+          newData.push({ file: file.name, fileKey: file.key, project: file.projectName, branches });
+        }
+        updateProgress(100, 'Tamamlandı');
+        allData = newData;
+        const meta = { totalBranches, totalFiles: allFiles.length, projectCount: projects.length };
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ data: allData, meta, savedAt: Date.now() }));
+        applyMeta(meta);
+        document.getElementById('staleBar').classList.remove('visible');
+        document.getElementById('lastUpdated').textContent = 'şimdi güncellendi';
+        showResults();
+        filterCards();
+      } catch (e) {
+        document.getElementById('staleBar').classList.remove('visible');
+        showError(e.message);
+        if (allData.length === 0) document.getElementById('emptyState').classList.add('visible');
+      } finally {
+        isFetching = false;
+      }
+    }
+
+    function updateProgress(pct, text) {
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressPct').textContent = pct + '%';
+      document.getElementById('staleText').textContent = text;
+    }
+
+    function applyMeta(m) {
+      document.getElementById('statBranches').textContent = m.totalBranches;
+      document.getElementById('statFiles').textContent = m.totalFiles;
+      document.getElementById('statProjects').textContent = m.projectCount;
+    }
+
+    function showResults() {
+      document.getElementById('emptyState').classList.remove('visible');
+      document.getElementById('resultsHeader').classList.add('visible');
+      document.getElementById('toolbar').classList.add('visible');
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return null;
+      const d = new Date(iso);
+      const now = new Date();
+      const diff = Math.floor((now - d) / 1000);
+      const days = Math.floor(diff / 86400);
+      const old = days > 180;
+      let text;
+      if (diff < 3600) text = Math.floor(diff / 60) + 'dk önce';
+      else if (diff < 86400) text = Math.floor(diff / 3600) + 'sa önce';
+      else if (days <= 30) text = days === 1 ? '1 gün önce' : days + ' gün önce';
+      else {
+        const months = Math.floor(days / 30);
+        const remDays = days % 30;
+        text = months + ' ay' + (remDays > 0 ? ' ' + remDays + ' gün' : '') + ' önce';
+      }
+      return { text, old };
+    }
+
+    function render(items) {
+      const container = document.getElementById('cards');
+      container.classList.remove('stale');
+      container.innerHTML = '';
+      items.forEach((item, i) => {
+        const has = item.branches.length > 0;
+        const card = document.createElement('div');
+        card.className = 'file-card' + (!has && hideEmpty ? ' hidden' : '');
+        card.style.animationDelay = (i * 0.03) + 's';
+        const fileUrl = `https://www.figma.com/design/${item.fileKey}/`;
+
+        const branchItems = item.branches.map(b => {
+          const parts = b.name.split('/');
+          const id = parts[0].trim();
+          const name = parts.slice(1).join('/').trim();
+          const isPD = /^PD-\d+$/.test(id);
+          const branchUrl = `https://www.figma.com/design/${b.key}/`;
+          const modInfo = b.modified ? fmtDate(b.modified) : null;
+          const dateHtml = modInfo ? `<span class="branch-date${modInfo.old ? ' old' : ''}">${modInfo.text}</span>` : '';
+          return `<div class="branch-item">
+        <span class="branch-icon">&#8887;</span>
+        <div class="branch-text">
+          <div class="branch-name">${isPD ? name : b.name}</div>
+          <div class="branch-meta">${isPD ? `<span class="branch-id">${id}</span>` : ''}${dateHtml}</div>
+        </div>
+        <a class="branch-link" href="${branchUrl}" target="_blank" title="Figma'da aç">${extIcon}</a>
+      </div>`;
+        }).join('');
+
+        card.innerHTML = `
+      <div class="file-header">
+        <div class="file-header-left">
+          <div class="file-name" title="${item.file}">${item.file}</div>
+          <div class="file-meta">
+            <span class="branch-pill ${has ? 'has' : 'none'}">${has ? item.branches.length + ' branch' : 'branch yok'}</span>
+          </div>
+        </div>
+        <a class="file-link" href="${fileUrl}" target="_blank" title="Figma'da aç">${extIcon}</a>
+      </div>
+      ${has ? `<div class="branches-list">${branchItems}</div>` : ''}`;
+        container.appendChild(card);
+      });
+    }
+
+    function filterCards() {
+      const q = document.getElementById('search').value.toLowerCase();
+      let items = allData;
+      if (q) {
+        items = allData
+          .map(item => ({ ...item, branches: item.branches.filter(b => b.name.toLowerCase().includes(q)) }))
+          .filter(item => item.file.toLowerCase().includes(q) || item.branches.length > 0);
+      }
+      if (hideEmpty) items = items.filter(i => i.branches.length > 0);
+      items.sort((a, b) => (b.branches.length > 0 ? 1 : 0) - (a.branches.length > 0 ? 1 : 0));
+      document.getElementById('noResults').style.display = items.length === 0 ? 'block' : 'none';
+      render(items);
+    }
+
+    function timeAgo(ts) {
+      const d = Math.floor((Date.now() - ts) / 1000);
+      if (d < 60) return d + 's önce';
+      if (d < 3600) return Math.floor(d / 60) + 'dk önce';
+      if (d < 86400) return Math.floor(d / 3600) + 'sa önce';
+      return Math.floor(d / 86400) + 'g önce';
+    }
+
+    function showError(msg) {
+      const s = document.getElementById('status');
+      s.className = 'status error';
+      document.getElementById('statusText').textContent = '⚠ ' + msg;
+      s.style.display = 'flex';
+      setTimeout(() => { s.style.display = 'none'; }, 6000);
+    }
+  </script>
+</body>
+
+</html>
