@@ -268,24 +268,34 @@
     /* STATUS */
     .stale-bar {
       display: none;
+      flex-direction: column;
       align-items: center;
-      gap: 10px;
-      padding: 10px 16px;
-      border-radius: 10px;
+      max-width: 480px;
+      margin: 60px auto 16px;
+      padding: 32px;
+      border-radius: 16px;
       font-family: var(--mono);
       font-size: 12px;
-      margin-bottom: 16px;
-      background: rgba(108, 99, 255, 0.08);
-      border: 1px solid rgba(108, 99, 255, 0.2);
+      background: var(--surface);
+      border: 1px solid var(--border);
       color: #9090cc;
     }
 
     .stale-bar .loading-title {
       font-family: var(--sans);
-      font-size: 15px;
-      font-weight: 700;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -1px;
       color: var(--text);
-      margin-bottom: 2px;
+      margin-bottom: 20px;
+    }
+
+    .stale-bar .loading-title em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .stale-bar.visible {
@@ -293,7 +303,7 @@
     }
 
     .stale-bar .progress-wrap {
-      flex: 1;
+      width: 100%;
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -1081,7 +1091,7 @@
         document.getElementById('emptyState').classList.remove('visible');
         document.getElementById('staleBar').classList.add('visible');
         const projLabel = PROJECT_MAP[document.getElementById('projectId').value] || 'Proje';
-        document.getElementById('loadingTitle').textContent = projLabel + ' dosyaları yükleniyor';
+        document.getElementById('loadingTitle').innerHTML = projLabel + ' <em>Branch\'ler</em>';
         document.getElementById('staleText').textContent = 'Başlatılıyor...';
       }
       await doFetch(token, teamId);
