@@ -281,11 +281,40 @@
     }
 
     .stale-bar .loading-title {
+      display: none;
       font-family: var(--sans);
-      font-size: 15px;
-      font-weight: 700;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -1px;
       color: var(--text);
-      margin-bottom: 2px;
+      margin-bottom: 16px;
+    }
+
+    .stale-bar .loading-title em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stale-bar.first-load {
+      flex-direction: column;
+      align-items: center;
+      max-width: 480px;
+      margin: 60px auto 16px;
+      padding: 32px;
+      border-radius: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+
+    .stale-bar.first-load .loading-title {
+      display: block;
+    }
+
+    .stale-bar.first-load .progress-wrap {
+      width: 100%;
     }
 
     .stale-bar.visible {
@@ -1079,9 +1108,10 @@
         document.getElementById('toolbar').classList.remove('visible');
         document.getElementById('cards').innerHTML = '';
         document.getElementById('emptyState').classList.remove('visible');
-        document.getElementById('staleBar').classList.add('visible');
+        const bar = document.getElementById('staleBar');
+        bar.classList.add('visible', 'first-load');
         const projLabel = PROJECT_MAP[document.getElementById('projectId').value] || 'Proje';
-        document.getElementById('loadingTitle').textContent = projLabel + ' dosyaları yükleniyor';
+        document.getElementById('loadingTitle').innerHTML = projLabel + ' <em>dosyaları yükleniyor</em>';
         document.getElementById('staleText').textContent = 'Başlatılıyor...';
       }
       await doFetch(token, teamId);
@@ -1144,12 +1174,12 @@
         const meta = { totalBranches, totalFiles: allFiles.length, projectCount: projects.length };
         localStorage.setItem(CACHE_KEY, JSON.stringify({ data: allData, meta, savedAt: Date.now() }));
         applyMeta(meta);
-        document.getElementById('staleBar').classList.remove('visible');
+        document.getElementById('staleBar').classList.remove('visible', 'first-load');
         document.getElementById('lastUpdated').textContent = 'şimdi güncellendi';
         showResults();
         filterCards();
       } catch (e) {
-        document.getElementById('staleBar').classList.remove('visible');
+        document.getElementById('staleBar').classList.remove('visible', 'first-load');
         showError(e.message);
         if (allData.length === 0) document.getElementById('emptyState').classList.add('visible');
       } finally {
