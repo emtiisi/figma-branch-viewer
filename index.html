@@ -823,6 +823,11 @@
       opacity: 1;
     }
 
+    .branch-date.fresh {
+      color: var(--green);
+      opacity: 1;
+    }
+
     .branch-link {
       display: flex;
       align-items: center;
@@ -1259,6 +1264,7 @@
       const diff = Math.floor((now - d) / 1000);
       const days = Math.floor(diff / 86400);
       const old = days > 180;
+      const fresh = days < 3;
       let text;
       if (diff < 3600) text = Math.floor(diff / 60) + 'dk önce';
       else if (diff < 86400) text = Math.floor(diff / 3600) + 'sa önce';
@@ -1268,7 +1274,7 @@
         const remDays = days % 30;
         text = months + ' ay' + (remDays > 0 ? ' ' + remDays + ' gün' : '') + ' önce';
       }
-      return { text, old };
+      return { text, old, fresh };
     }
 
     function render(items) {
@@ -1299,7 +1305,7 @@
           const isPD = /^PD-\d+$/.test(id);
           const branchUrl = `https://www.figma.com/design/${b.key}/`;
           const modInfo = b.modified ? fmtDate(b.modified) : null;
-          const dateHtml = modInfo ? `<span class="branch-date${modInfo.old ? ' old' : ''}">${modInfo.text}</span>` : '';
+          const dateHtml = modInfo ? `<span class="branch-date${modInfo.old ? ' old' : (modInfo.fresh ? ' fresh' : '')}">${modInfo.text}</span>` : '';
           return `<div class="branch-item">
         <span class="branch-icon">&#8887;</span>
         <div class="branch-text">
