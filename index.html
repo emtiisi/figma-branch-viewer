@@ -1131,33 +1131,12 @@
             <option value="306384154">SSO Global</option>
           </select>
           <button class="icon-btn" onclick="startFetch()">&#8635; Yenile</button>
-          <div class="settings-wrap" id="settingsWrap">
-            <button class="settings-btn" id="settingsBtn" onclick="toggleDropdown()" title="Token ayarları">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-              </svg>
-            </button>
-            <button class="icon-btn" onclick="clearSettings()" style="color:#ff6584;border-color:rgba(255,101,132,0.3);">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-              Çıkış Yap
-            </button>
-            <div class="dropdown" id="dropdown">
-              <h3>Bağlantı Ayarları</h3>
-              <div class="field">
-                <label>FIGMA API TOKEN <span class="info-icon" tabindex="0">
-                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="7"/><line x1="8" y1="7" x2="8" y2="11"/><circle cx="8" cy="5" r="0.5" fill="currentColor" stroke="none"/></svg>
-                  <span class="info-tooltip">Figma'da profil fotoğrafına tıkla → <strong>Settings</strong> → <strong>Security</strong> bölümüne in → <strong>Personal access tokens</strong> altında <strong>Generate new token</strong>'a tıkla → Token'ı kopyalayıp buraya yapıştır.</span>
-                </span></label>
-                <input type="password" id="token" placeholder="figd_..." />
-              </div>
-              <input type="hidden" id="teamId" value="1392498478" />
-              <div class="dropdown-divider"></div>
-              <div class="dropdown-actions">
-                <button class="dd-btn primary" onclick="saveAndFetch()">Kaydet</button>
-                <button class="dd-btn danger" onclick="clearSettings()">Çıkış Yap</button>
-              </div>
-            </div>
-          </div>
+          <input type="hidden" id="token" />
+          <input type="hidden" id="teamId" value="1392498478" />
+          <button class="icon-btn" onclick="clearSettings()" style="color:#ff6584;border-color:rgba(255,101,132,0.3);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Çıkış Yap
+          </button>
         </div>
       </div>
     </div>
@@ -1269,7 +1248,7 @@
         token: document.getElementById('token').value,
         projectId: document.getElementById('projectId').value,
       }));
-      closeDropdown();
+
       onProjectChange(true);
     }
 
@@ -1304,22 +1283,6 @@
 
     const extIcon = `<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 2H2v8h8V7M7 1h4m0 0v4m0-4L5.5 6.5"/></svg>`;
 
-    // Dropdown
-    function toggleDropdown() {
-      const dd = document.getElementById('dropdown');
-      const btn = document.getElementById('settingsBtn');
-      const isOpen = dd.classList.contains('open');
-      dd.classList.toggle('open', !isOpen);
-      btn.classList.toggle('active', !isOpen);
-    }
-    function closeDropdown() {
-      document.getElementById('dropdown').classList.remove('open');
-      document.getElementById('settingsBtn').classList.remove('active');
-    }
-    document.addEventListener('click', e => {
-      if (!document.getElementById('settingsWrap').contains(e.target)) closeDropdown();
-    });
-
     function toggleHideEmpty() {
       hideEmpty = !hideEmpty;
       document.getElementById('hideEmptyBtn').classList.toggle('on', hideEmpty);
@@ -1331,18 +1294,11 @@
         token: document.getElementById('token').value,
         projectId: document.getElementById('projectId').value,
       }));
-      onProjectChange();
-    }
-    function saveAndFetch() {
-      saveSettings();
-      closeDropdown();
-      document.getElementById('cards').classList.add('stale');
-      startFetch();
     }
     async function refreshAll() {
       const token = document.getElementById('token').value.trim();
       if (!token) { showError('Token gerekli!'); return; }
-      closeDropdown();
+
       const allIds = Array.from(document.querySelectorAll('.proj-tab')).map(t => t.dataset.id);
       const currentId = document.getElementById('projectId').value;
       allIds.forEach(id => localStorage.removeItem(getCacheKey(id)));
@@ -1366,7 +1322,7 @@
       document.getElementById('cards').innerHTML = '';
       document.getElementById('emptyState').classList.add('visible');
       onProjectChange();
-      closeDropdown();
+
     }
 
     window.onload = () => {
