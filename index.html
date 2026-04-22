@@ -173,6 +173,70 @@
       margin-top: 4px;
     }
 
+    .info-icon {
+      display: inline-flex;
+      align-items: center;
+      position: relative;
+      cursor: pointer;
+      color: var(--muted);
+      vertical-align: middle;
+      margin-left: 4px;
+    }
+
+    .info-icon svg {
+      width: 12px;
+      height: 12px;
+      transition: color 0.2s;
+    }
+
+    .info-icon:hover svg,
+    .info-icon:focus svg {
+      color: var(--accent);
+    }
+
+    .info-tooltip {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: 240px;
+      padding: 10px 12px;
+      background: var(--surface2);
+      border: 1px solid rgba(108, 99, 255, 0.25);
+      border-radius: 8px;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--muted);
+      line-height: 1.7;
+      text-transform: none;
+      letter-spacing: 0;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      z-index: 200;
+      pointer-events: none;
+    }
+
+    .info-tooltip strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .info-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: rgba(108, 99, 255, 0.25);
+    }
+
+    .info-icon:hover .info-tooltip,
+    .info-icon:focus .info-tooltip {
+      display: block;
+    }
+
     .field input,
     .field select {
       width: 100%;
@@ -483,6 +547,33 @@
       color: var(--muted);
     }
 
+    .project-select {
+      height: 28px;
+      padding: 0 10px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      cursor: pointer;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      transition: all 0.2s;
+      appearance: none;
+      padding-right: 22px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+    }
+    .project-select:hover, .project-select:focus {
+      border-color: rgba(108, 99, 255, 0.4);
+      color: var(--accent);
+      outline: none;
+    }
+    .project-select option {
+      background: #1a1a2e;
+      color: var(--text);
+    }
+
     .icon-btn {
       height: 28px;
       padding: 0 10px;
@@ -515,11 +606,47 @@
       display: none;
       align-items: center;
       gap: 10px;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
 
     .toolbar.visible {
       display: flex;
+    }
+
+    .project-tabs {
+      display: none;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .project-tabs.visible {
+      display: flex;
+    }
+
+    .proj-tab {
+      height: 36px;
+      padding: 0 18px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      cursor: pointer;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .proj-tab:hover {
+      border-color: rgba(108, 99, 255, 0.4);
+      color: var(--text);
+    }
+
+    .proj-tab.active {
+      background: rgba(108, 99, 255, 0.15);
+      border-color: var(--accent);
+      color: var(--accent);
     }
 
     .search-wrap {
@@ -944,8 +1071,6 @@
     <div class="status" id="status"><span id="statusText"></span></div>
 
     <div class="results-header" id="resultsHeader">
-      <div class="breadcrumb">Figma / <span id="teamName">Workspace</span> / <span id="projectName">tüm projeler</span>
-        / branches</div>
       <h1 id="pageTitle">Kripto <em>Branch'ler</em></h1>
       <div class="meta">
         <div class="badge">
@@ -953,8 +1078,17 @@
         </div>
         <div class="badge total"><span id="statFiles">0</span> dosya &middot; <span id="statProjects">0</span> proje
         </div>
-        <span class="last-updated" id="lastUpdated"></span>
+        <span class="last-updated" id="lastUpdated"><span class="last-updated-label">Son Güncelleme</span> <span id="lastUpdatedVal"></span></span>
         <div class="meta-right">
+          <select id="projectId" style="display:none">
+            <option value="209495921">Kripto</option>
+            <option value="277372227">Hisse</option>
+            <option value="205113374">Global</option>
+            <option value="270653299">Kripto Web</option>
+            <option value="303634916">SSO Kripto</option>
+            <option value="331112787">SSO Hisse</option>
+            <option value="306384154">SSO Global</option>
+          </select>
           <button class="icon-btn" onclick="startFetch()">&#8635; Yenile</button>
           <div class="settings-wrap" id="settingsWrap">
             <button class="settings-btn" id="settingsBtn" onclick="toggleDropdown()">
@@ -964,30 +1098,20 @@
                 <path
                   d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
               </svg>
-              Ayarlar
             </button>
             <div class="dropdown" id="dropdown">
               <h3>Bağlantı Ayarları</h3>
               <div class="field">
-                <label>FIGMA API TOKEN</label>
+                <label>FIGMA API TOKEN <span class="info-icon" tabindex="0">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="7"/><line x1="8" y1="7" x2="8" y2="11"/><circle cx="8" cy="5" r="0.5" fill="currentColor" stroke="none"/></svg>
+                  <span class="info-tooltip">Figma'da profil fotoğrafına tıkla → <strong>Settings</strong> → <strong>Security</strong> bölümüne in → <strong>Personal access tokens</strong> altında <strong>Generate new token</strong>'a tıkla → Token'ı kopyalayıp buraya yapıştır.</span>
+                </span></label>
                 <input type="password" id="token" placeholder="figd_..." />
               </div>
               <input type="hidden" id="teamId" value="1392498478" />
-              <div class="field">
-                <label>PROJE SEÇİMİ</label>
-                <select id="projectId">
-                  <option value="209495921">Kripto</option>
-                  <option value="277372227">Hisse</option>
-                  <option value="205113374">Global</option>
-                  <option value="270653299">Kripto Web</option>
-                  <option value="303634916">SSO Kripto</option>
-                  <option value="331112787">SSO Hisse</option>
-                  <option value="306384154">SSO Global</option>
-                </select>
-              </div>
               <div class="dropdown-divider"></div>
               <div class="dropdown-actions">
-                <button class="dd-btn primary" onclick="saveAndFetch()">Kaydet &amp; Getir</button>
+                <button class="dd-btn primary" onclick="saveAndFetch()">Kaydet</button>
                 <button class="dd-btn danger" onclick="clearSettings()">&#10005; Temizle</button>
               </div>
             </div>
@@ -996,12 +1120,21 @@
       </div>
     </div>
 
+    <div class="project-tabs" id="projectTabs">
+      <button class="proj-tab" data-id="209495921" onclick="selectProjectTab('209495921')">Kripto</button>
+      <button class="proj-tab" data-id="277372227" onclick="selectProjectTab('277372227')">Hisse</button>
+      <button class="proj-tab" data-id="205113374" onclick="selectProjectTab('205113374')">Global</button>
+      <button class="proj-tab" data-id="270653299" onclick="selectProjectTab('270653299')">Kripto Web</button>
+      <button class="proj-tab" data-id="303634916" onclick="selectProjectTab('303634916')">SSO Kripto</button>
+      <button class="proj-tab" data-id="331112787" onclick="selectProjectTab('331112787')">SSO Hisse</button>
+      <button class="proj-tab" data-id="306384154" onclick="selectProjectTab('306384154')">SSO Global</button>
+    </div>
     <div class="toolbar" id="toolbar">
       <div class="search-wrap">
         <span class="search-icon">&#9906;</span>
         <input type="text" id="search" placeholder="branch veya dosya ara..." oninput="filterCards()" />
       </div>
-      <button class="toggle-btn" id="hideEmptyBtn" onclick="toggleHideEmpty()">
+      <button class="toggle-btn on" id="hideEmptyBtn" onclick="toggleHideEmpty()">
         <span class="dot"></span> Branch olmayanları gizle
       </button>
     </div>
@@ -1049,21 +1182,59 @@
   </div>
 
   <script>
-    const CACHE_KEY = 'figma_cache';
     const SETTINGS_KEY = 'figma_settings';
+    function getCacheKey(projectId) { return 'figma_cache_' + (projectId || 'default'); }
     const PROJECT_MAP = { '209495921': 'Kripto', '277372227': 'Hisse', '205113374': 'Global', '270653299': 'Kripto Web', '303634916': 'SSO Kripto', '331112787': 'SSO Hisse', '306384154': 'SSO Global' };
     let allData = [];
     let isFetching = false;
-    let hideEmpty = false;
+    let hideEmpty = true;
     let savedProjectId = '209495921';
 
-    function onProjectChange() {
+    function onProjectChange(autoFetch = false) {
       const sel = document.getElementById('projectId').value;
       savedProjectId = sel;
       const label = PROJECT_MAP[sel] || 'Branch';
       document.getElementById('pageTitle').innerHTML = `${label} <em>Branch'ler</em>`;
       document.title = `${label} Branch Viewer`;
       document.getElementById('cards').classList.remove('stale');
+      syncTabs(sel);
+      const cache = localStorage.getItem(getCacheKey(sel));
+      if (cache) {
+        const { data, meta, savedAt } = JSON.parse(cache);
+        allData = data;
+        applyMeta(meta);
+        render(allData);
+        showResults();
+        document.getElementById('lastUpdatedVal').textContent = timeAgo(savedAt);
+      } else {
+        allData = [];
+        document.getElementById('resultsHeader').classList.remove('visible');
+        document.getElementById('toolbar').classList.remove('visible');
+        document.getElementById('cards').innerHTML = '';
+        document.getElementById('emptyState').classList.remove('visible');
+        if (autoFetch) startFetch();
+        else document.getElementById('emptyState').classList.add('visible');
+      }
+    }
+
+    function onProjectChangeDirect() {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+        token: document.getElementById('token').value,
+        projectId: document.getElementById('projectId').value,
+      }));
+      closeDropdown();
+      onProjectChange(true);
+    }
+
+    function selectProjectTab(id) {
+      document.getElementById('projectId').value = id;
+      onProjectChangeDirect();
+    }
+
+    function syncTabs(id) {
+      document.querySelectorAll('.proj-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.id === id);
+      });
     }
 
     function initStart() {
@@ -1116,12 +1287,13 @@
     }
     function clearSettings() {
       localStorage.removeItem(SETTINGS_KEY);
-      localStorage.removeItem(CACHE_KEY);
+      Object.keys(localStorage).filter(k => k.startsWith('figma_cache_')).forEach(k => localStorage.removeItem(k));
       document.getElementById('token').value = '';
       document.getElementById('projectId').selectedIndex = 0;
       allData = [];
       document.getElementById('resultsHeader').classList.remove('visible');
       document.getElementById('toolbar').classList.remove('visible');
+      document.getElementById('projectTabs').classList.remove('visible');
       document.getElementById('cards').innerHTML = '';
       document.getElementById('emptyState').classList.add('visible');
       onProjectChange();
@@ -1136,23 +1308,6 @@
         if (projectId) document.getElementById('projectId').value = projectId;
       }
       onProjectChange();
-      const cache = localStorage.getItem(CACHE_KEY);
-      if (cache) {
-        const { data, meta, savedAt } = JSON.parse(cache);
-        allData = data;
-        applyMeta(meta);
-        render(allData);
-        showResults();
-        document.getElementById('lastUpdated').textContent = 'önbellek: ' + timeAgo(savedAt);
-        const token = document.getElementById('token').value.trim();
-        const teamId = document.getElementById('teamId').value.trim();
-        if (token && teamId) fetchInBackground();
-      } else {
-        const token = document.getElementById('token').value.trim();
-        const teamId = document.getElementById('teamId').value.trim();
-        if (token && teamId) startFetch();
-        else document.getElementById('emptyState').classList.add('visible');
-      }
     };
 
     async function startFetch() {
@@ -1231,10 +1386,10 @@
         updateProgress(100, 'Tamamlandı');
         allData = newData;
         const meta = { totalBranches, totalFiles: allFiles.length, projectCount: projects.length };
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ data: allData, meta, savedAt: Date.now() }));
+        localStorage.setItem(getCacheKey(projectId), JSON.stringify({ data: allData, meta, savedAt: Date.now() }));
         applyMeta(meta);
         document.getElementById('staleBar').classList.remove('visible', 'first-load');
-        document.getElementById('lastUpdated').textContent = 'şimdi güncellendi';
+        document.getElementById('lastUpdatedVal').textContent = timeAgo(Date.now());
         showResults();
         filterCards();
       } catch (e) {
@@ -1262,6 +1417,7 @@
       document.getElementById('emptyState').classList.remove('visible');
       document.getElementById('resultsHeader').classList.add('visible');
       document.getElementById('toolbar').classList.add('visible');
+      document.getElementById('projectTabs').classList.add('visible');
       document.querySelector('.note').style.display = '';
     }
 
@@ -1354,11 +1510,9 @@
     }
 
     function timeAgo(ts) {
-      const d = Math.floor((Date.now() - ts) / 1000);
-      if (d < 60) return d + 's önce';
-      if (d < 3600) return Math.floor(d / 60) + 'dk önce';
-      if (d < 86400) return Math.floor(d / 3600) + 'sa önce';
-      return Math.floor(d / 86400) + 'g önce';
+      const d = new Date(ts);
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getDate()} ${['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'][d.getMonth()]} ${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
 
     function showError(msg) {
