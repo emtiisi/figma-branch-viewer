@@ -1423,7 +1423,8 @@
         document.getElementById('lastUpdatedVal').textContent = timeAgo(Date.now());
         showResults();
         filterCards();
-        const uncached = Object.keys(PROJECT_MAP).filter(id => id !== projectId && !localStorage.getItem(getCacheKey(id)));
+        const tabOrder = Array.from(document.querySelectorAll('.proj-tab')).map(t => t.dataset.id);
+        const uncached = tabOrder.filter(id => id !== projectId && !localStorage.getItem(getCacheKey(id)));
         if (uncached.length > 0) backgroundFetchAll(token, uncached);
       } catch (e) {
         document.getElementById('staleBar').classList.remove('visible', 'first-load');
