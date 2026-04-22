@@ -649,14 +649,31 @@
       color: var(--accent);
     }
 
-    .proj-tab.loading {
-      opacity: 0.5;
-      animation: tabPulse 1s ease-in-out infinite;
+    .proj-tab.no-cache {
+      opacity: 0.35;
+      pointer-events: none;
+      cursor: default;
     }
 
-    @keyframes tabPulse {
-      0%, 100% { opacity: 0.5; }
-      50% { opacity: 0.9; }
+    .proj-tab.loading {
+      pointer-events: none;
+      color: var(--accent);
+      border-color: transparent;
+      background:
+        linear-gradient(var(--bg), var(--bg)) padding-box,
+        conic-gradient(from 270deg, var(--accent) 0%, var(--accent) var(--bp, 0%), rgba(108,99,255,0.15) var(--bp, 0%)) border-box;
+      animation: borderFill 1.8s linear infinite;
+    }
+
+    @property --bp {
+      syntax: '<percentage>';
+      inherits: false;
+      initial-value: 0%;
+    }
+
+    @keyframes borderFill {
+      0%   { --bp: 0%; }
+      100% { --bp: 100%; }
     }
 
     .search-wrap {
@@ -1249,6 +1266,13 @@
       });
     }
 
+    function updateTabStates() {
+      document.querySelectorAll('.proj-tab').forEach(tab => {
+        const hasCache = !!localStorage.getItem(getCacheKey(tab.dataset.id));
+        tab.classList.toggle('no-cache', !hasCache);
+      });
+    }
+
     function initStart() {
       const token = document.getElementById('initToken').value.trim();
       if (!token) { showError('Token gerekli!'); return; }
@@ -1421,7 +1445,7 @@
       for (const pid of projectIds) {
         if (localStorage.getItem(getCacheKey(pid))) continue;
         const tab = document.querySelector(`.proj-tab[data-id="${pid}"]`);
-        if (tab) tab.classList.add('loading');
+        if (tab) { tab.classList.remove('no-cache'); tab.classList.add('loading'); }
         let ok = false;
         try {
           const fr = await fetch(`https://api.figma.com/v1/projects/${pid}/files`, { headers: h });
@@ -1445,8 +1469,10 @@
             console.log(`[bg] ${PROJECT_MAP[pid]} tamamlandı (${files.length} dosya, ${totalBranches} branch)`);
           }
         } catch (e) { console.error(`[bg] ${pid} hata:`, e); }
-        if (tab) tab.classList.remove('loading');
-        if (ok && tab) tab.title = 'önbellekte';
+        if (tab) {
+          tab.classList.remove('loading');
+          if (ok) tab.classList.remove('no-cache');
+        }
       }
       console.log('[bg] bitti');
     }
@@ -1469,6 +1495,7 @@
       document.getElementById('toolbar').classList.add('visible');
       document.getElementById('projectTabs').classList.add('visible');
       document.querySelector('.note').style.display = '';
+      updateTabStates();
     }
 
     function fmtDate(iso) {
