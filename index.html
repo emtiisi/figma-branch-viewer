@@ -1344,7 +1344,7 @@
     async function doFetch(token, teamId) {
       isFetching = true;
       const projectId = document.getElementById('projectId').value.trim();
-      const h = { 'X-Figma-Token': token };
+      const h = { 'X-Figma-Token': token.replace(/[^\x20-\x7E]/g, '') };
       document.getElementById('staleBar').classList.add('visible');
       updateProgress(0, 'Projeler alınıyor...');
       try {
