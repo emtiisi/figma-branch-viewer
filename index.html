@@ -1394,12 +1394,38 @@
         document.getElementById('lastUpdatedVal').textContent = timeAgo(Date.now());
         showResults();
         filterCards();
+        const uncached = Object.keys(PROJECT_MAP).filter(id => id !== projectId && !localStorage.getItem(getCacheKey(id)));
+        if (uncached.length > 0) backgroundFetchAll(token, uncached);
       } catch (e) {
         document.getElementById('staleBar').classList.remove('visible', 'first-load');
         showError(e.message);
         if (allData.length === 0) document.getElementById('emptyState').classList.add('visible');
       } finally {
         isFetching = false;
+      }
+    }
+
+    async function backgroundFetchAll(token, projectIds) {
+      const h = { 'X-Figma-Token': token.replace(/[^\x20-\x7E]/g, '') };
+      for (const pid of projectIds) {
+        if (localStorage.getItem(getCacheKey(pid))) continue;
+        try {
+          const fr = await fetch(`https://api.figma.com/v1/projects/${pid}/files`, { headers: h });
+          if (!fr.ok) continue;
+          const fd = await fr.json();
+          const files = fd.files || [];
+          const newData = [];
+          let totalBranches = 0;
+          for (const file of files) {
+            const br = await fetch(`https://api.figma.com/v1/files/${file.key}?depth=1&branch_data=true`, { headers: h });
+            const bd = await br.json();
+            const branches = (bd.branches || []).map(b => ({ name: b.name, key: b.key, modified: b.last_modified }));
+            totalBranches += branches.length;
+            newData.push({ file: file.name, fileKey: file.key, project: PROJECT_MAP[pid], branches });
+          }
+          const meta = { totalBranches, totalFiles: files.length, projectCount: 1 };
+          localStorage.setItem(getCacheKey(pid), JSON.stringify({ data: newData, meta, savedAt: Date.now() }));
+        } catch (e) { /* sessizce geç */ }
       }
     }
 
