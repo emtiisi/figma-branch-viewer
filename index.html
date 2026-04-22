@@ -979,6 +979,7 @@
                   <option value="209495921">Kripto</option>
                   <option value="277372227">Hisse</option>
                   <option value="205113374">Global</option>
+                  <option value="270653299">Kripto Web</option>
                 </select>
               </div>
               <div class="dropdown-divider"></div>
@@ -1032,6 +1033,7 @@
             <option value="209495921">Kripto</option>
             <option value="277372227">Hisse</option>
             <option value="205113374">Global</option>
+            <option value="270653299">Kripto Web</option>
           </select>
         </div>
         <button class="start-btn" onclick="initStart()">Başla</button>
@@ -1043,7 +1045,7 @@
   <script>
     const CACHE_KEY = 'figma_cache';
     const SETTINGS_KEY = 'figma_settings';
-    const PROJECT_MAP = { '209495921': 'Kripto', '277372227': 'Hisse', '205113374': 'Global' };
+    const PROJECT_MAP = { '209495921': 'Kripto', '277372227': 'Hisse', '205113374': 'Global', '270653299': 'Kripto Web' };
     let allData = [];
     let isFetching = false;
     let hideEmpty = false;
@@ -1263,7 +1265,7 @@
       const now = new Date();
       const diff = Math.floor((now - d) / 1000);
       const days = Math.floor(diff / 86400);
-      const old = days > 180;
+      const old = days > 90;
       const fresh = days < 3;
       let text;
       if (diff < 3600) text = Math.floor(diff / 60) + 'dk önce';
