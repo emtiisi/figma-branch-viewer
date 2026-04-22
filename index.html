@@ -649,6 +649,16 @@
       color: var(--accent);
     }
 
+    .proj-tab.loading {
+      opacity: 0.5;
+      animation: tabPulse 1s ease-in-out infinite;
+    }
+
+    @keyframes tabPulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 0.9; }
+    }
+
     .search-wrap {
       flex: 1;
       position: relative;
@@ -1407,26 +1417,38 @@
 
     async function backgroundFetchAll(token, projectIds) {
       const h = { 'X-Figma-Token': token.replace(/[^\x20-\x7E]/g, '') };
+      console.log('[bg] başlıyor, projeler:', projectIds);
       for (const pid of projectIds) {
         if (localStorage.getItem(getCacheKey(pid))) continue;
+        const tab = document.querySelector(`.proj-tab[data-id="${pid}"]`);
+        if (tab) tab.classList.add('loading');
+        let ok = false;
         try {
           const fr = await fetch(`https://api.figma.com/v1/projects/${pid}/files`, { headers: h });
-          if (!fr.ok) continue;
-          const fd = await fr.json();
-          const files = fd.files || [];
-          const newData = [];
-          let totalBranches = 0;
-          for (const file of files) {
-            const br = await fetch(`https://api.figma.com/v1/files/${file.key}?depth=1&branch_data=true`, { headers: h });
-            const bd = await br.json();
-            const branches = (bd.branches || []).map(b => ({ name: b.name, key: b.key, modified: b.last_modified }));
-            totalBranches += branches.length;
-            newData.push({ file: file.name, fileKey: file.key, project: PROJECT_MAP[pid], branches });
+          if (!fr.ok) { console.warn(`[bg] ${pid} files: ${fr.status}`); }
+          else {
+            const fd = await fr.json();
+            const files = fd.files || [];
+            const newData = [];
+            let totalBranches = 0;
+            for (const file of files) {
+              const br = await fetch(`https://api.figma.com/v1/files/${file.key}?depth=1&branch_data=true`, { headers: h });
+              if (!br.ok) continue;
+              const bd = await br.json();
+              const branches = (bd.branches || []).map(b => ({ name: b.name, key: b.key, modified: b.last_modified }));
+              totalBranches += branches.length;
+              newData.push({ file: file.name, fileKey: file.key, project: PROJECT_MAP[pid], branches });
+            }
+            const meta = { totalBranches, totalFiles: files.length, projectCount: 1 };
+            localStorage.setItem(getCacheKey(pid), JSON.stringify({ data: newData, meta, savedAt: Date.now() }));
+            ok = true;
+            console.log(`[bg] ${PROJECT_MAP[pid]} tamamlandı (${files.length} dosya, ${totalBranches} branch)`);
           }
-          const meta = { totalBranches, totalFiles: files.length, projectCount: 1 };
-          localStorage.setItem(getCacheKey(pid), JSON.stringify({ data: newData, meta, savedAt: Date.now() }));
-        } catch (e) { /* sessizce geç */ }
+        } catch (e) { console.error(`[bg] ${pid} hata:`, e); }
+        if (tab) tab.classList.remove('loading');
+        if (ok && tab) tab.title = 'önbellekte';
       }
+      console.log('[bg] bitti');
     }
 
     function updateProgress(pct, text) {
