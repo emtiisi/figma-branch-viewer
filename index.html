@@ -276,7 +276,7 @@
 
     .dropdown-actions {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 8px;
       margin-top: 16px;
     }
@@ -1153,6 +1153,7 @@
               <div class="dropdown-divider"></div>
               <div class="dropdown-actions">
                 <button class="dd-btn primary" onclick="saveAndFetch()">Kaydet</button>
+                <button class="dd-btn secondary" onclick="refreshAll()">&#8635; Tümünü Yenile</button>
                 <button class="dd-btn danger" onclick="clearSettings()">&#10005; Temizle</button>
               </div>
             </div>
@@ -1338,6 +1339,21 @@
       document.getElementById('cards').classList.add('stale');
       startFetch();
     }
+    async function refreshAll() {
+      const token = document.getElementById('token').value.trim();
+      if (!token) { showError('Token gerekli!'); return; }
+      closeDropdown();
+      const allIds = Array.from(document.querySelectorAll('.proj-tab')).map(t => t.dataset.id);
+      const currentId = document.getElementById('projectId').value;
+      allIds.forEach(id => localStorage.removeItem(getCacheKey(id)));
+      document.querySelectorAll('.proj-tab').forEach(t => {
+        if (t.dataset.id !== currentId) t.classList.add('no-cache');
+      });
+      await startFetch();
+      const others = allIds.filter(id => id !== currentId);
+      if (others.length > 0) backgroundFetchAll(token, others);
+    }
+
     function clearSettings() {
       localStorage.removeItem(SETTINGS_KEY);
       Object.keys(localStorage).filter(k => k.startsWith('figma_cache_')).forEach(k => localStorage.removeItem(k));
