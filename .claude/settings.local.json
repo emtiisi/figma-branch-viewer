@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(open -a \"Google Chrome\" /Users/btcyz249/Desktop/AI/branch/index.html)",
+      "Bash(git -C /Users/btcyz249/Desktop/AI/branch add index.html)",
+      "Bash(git -C /Users/btcyz249/Desktop/AI/branch commit -m ' *)",
+      "Bash(git -C /Users/btcyz249/Desktop/AI/branch push origin master)"
+    ]
+  }
+}

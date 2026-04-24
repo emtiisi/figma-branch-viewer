@@ -1120,16 +1120,6 @@
         </div>
         <span class="last-updated" id="lastUpdated"><span class="last-updated-label">Son Güncelleme</span> <span id="lastUpdatedVal"></span></span>
         <div class="meta-right">
-          <select id="projectId" style="display:none">
-            <option value="209495921">Kripto</option>
-            <option value="277372227">Hisse</option>
-            <option value="205113374">Global</option>
-            <option value="424097845">Bithero</option>
-            <option value="270653299">Kripto Web</option>
-            <option value="303634916">SSO Kripto</option>
-            <option value="331112787">SSO Hisse</option>
-            <option value="306384154">SSO Global</option>
-          </select>
           <button class="icon-btn" onclick="startFetch()">&#8635; Yenile</button>
           <input type="hidden" id="token" />
           <input type="hidden" id="teamId" value="1392498478" />
@@ -1217,7 +1207,7 @@
     let savedProjectId = '209495921';
 
     function onProjectChange(autoFetch = false) {
-      const sel = document.getElementById('projectId').value;
+      const sel = savedProjectId;
       savedProjectId = sel;
       const label = PROJECT_MAP[sel] || 'Branch';
       document.getElementById('pageTitle').innerHTML = `${label} <em>Branch'ler</em>`;
@@ -1246,14 +1236,14 @@
     function onProjectChangeDirect() {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({
         token: document.getElementById('token').value,
-        projectId: document.getElementById('projectId').value,
+        projectId: savedProjectId,
       }));
 
       onProjectChange(true);
     }
 
     function selectProjectTab(id) {
-      document.getElementById('projectId').value = id;
+      savedProjectId = id;
       onProjectChangeDirect();
     }
 
@@ -1276,7 +1266,7 @@
       const projectId = document.getElementById('initProjectId').value;
       // Sync to settings dropdown
       document.getElementById('token').value = token;
-      document.getElementById('projectId').value = projectId;
+      savedProjectId = projectId;
       saveSettings();
       startFetch();
     }
@@ -1292,7 +1282,7 @@
     function saveSettings() {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({
         token: document.getElementById('token').value,
-        projectId: document.getElementById('projectId').value,
+        projectId: savedProjectId,
       }));
     }
     async function refreshAll() {
@@ -1300,7 +1290,7 @@
       if (!token) { showError('Token gerekli!'); return; }
 
       const allIds = Array.from(document.querySelectorAll('.proj-tab')).map(t => t.dataset.id);
-      const currentId = document.getElementById('projectId').value;
+      const currentId = savedProjectId;
       allIds.forEach(id => localStorage.removeItem(getCacheKey(id)));
       document.querySelectorAll('.proj-tab').forEach(t => {
         if (t.dataset.id !== currentId) t.classList.add('no-cache');
@@ -1314,7 +1304,7 @@
       localStorage.removeItem(SETTINGS_KEY);
       Object.keys(localStorage).filter(k => k.startsWith('figma_cache_')).forEach(k => localStorage.removeItem(k));
       document.getElementById('token').value = '';
-      document.getElementById('projectId').selectedIndex = 0;
+      savedProjectId = '209495921';
       allData = [];
       document.getElementById('resultsHeader').classList.remove('visible');
       document.getElementById('toolbar').classList.remove('visible');
@@ -1330,7 +1320,7 @@
       if (s) {
         const { token, projectId } = JSON.parse(s);
         if (token) document.getElementById('token').value = token;
-        if (projectId) document.getElementById('projectId').value = projectId;
+        if (projectId) savedProjectId = projectId;
       }
       onProjectChange();
     };
@@ -1348,7 +1338,7 @@
         document.getElementById('emptyState').classList.remove('visible');
         const bar = document.getElementById('staleBar');
         bar.classList.add('visible', 'first-load');
-        const projLabel = PROJECT_MAP[document.getElementById('projectId').value] || 'Proje';
+        const projLabel = PROJECT_MAP[savedProjectId] || 'Proje';
         document.getElementById('loadingTitle').innerHTML = projLabel + ` <em>Branch'leri</em>`;
         document.getElementById('staleText').textContent = 'Başlatılıyor...';
         document.querySelector('.note').style.display = 'none';
@@ -1366,7 +1356,7 @@
 
     async function doFetch(token, teamId) {
       isFetching = true;
-      const projectId = document.getElementById('projectId').value.trim();
+      const projectId = savedProjectId;
       const h = { 'X-Figma-Token': token.replace(/[^\x20-\x7E]/g, '') };
       document.getElementById('staleBar').classList.add('visible');
       updateProgress(0, 'Projeler alınıyor...');
