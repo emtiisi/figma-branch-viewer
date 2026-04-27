@@ -613,20 +613,79 @@
       display: flex;
     }
 
-    .project-tabs {
-      display: none;
-      gap: 8px;
+    .project-tabs-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       margin-bottom: 14px;
-      flex-wrap: wrap;
+      overflow: hidden;
+    }
+
+    .project-tabs {
+      display: flex;
+      gap: 8px;
+      flex: 1;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .project-tabs::-webkit-scrollbar {
+      display: none;
     }
 
     .project-tabs.visible {
       display: flex;
     }
 
+    .project-tabs-summary {
+      flex: 0 0 auto;
+    }
+
+    .tab-total {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      border-radius: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
     .proj-tab {
+      flex: 0 0 auto;
       height: 36px;
       padding: 0 18px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      cursor: pointer;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .proj-tab .tab-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      height: 18px;
+      border-radius: 999px;
+      background: rgba(108, 99, 255, 0.12);
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 0 8px;
+      white-space: nowrap;
+    }
       background: none;
       border: 1px solid var(--border);
       border-radius: 20px;
@@ -1131,15 +1190,20 @@
       </div>
     </div>
 
-    <div class="project-tabs" id="projectTabs">
-      <button class="proj-tab" data-id="209495921" onclick="selectProjectTab('209495921')">Kripto</button>
-      <button class="proj-tab" data-id="277372227" onclick="selectProjectTab('277372227')">Hisse</button>
-      <button class="proj-tab" data-id="205113374" onclick="selectProjectTab('205113374')">Global</button>
-      <button class="proj-tab" data-id="424097845" onclick="selectProjectTab('424097845')">Bithero</button>
-      <button class="proj-tab" data-id="270653299" onclick="selectProjectTab('270653299')">Kripto Web</button>
-      <button class="proj-tab" data-id="303634916" onclick="selectProjectTab('303634916')">SSO Kripto</button>
-      <button class="proj-tab" data-id="331112787" onclick="selectProjectTab('331112787')">SSO Hisse</button>
-      <button class="proj-tab" data-id="306384154" onclick="selectProjectTab('306384154')">SSO Global</button>
+    <div class="project-tabs-wrap">
+      <div class="project-tabs" id="projectTabs">
+        <button class="proj-tab" data-id="209495921" onclick="selectProjectTab('209495921')">Kripto <span class="tab-count"></span></button>
+        <button class="proj-tab" data-id="277372227" onclick="selectProjectTab('277372227')">Hisse <span class="tab-count"></span></button>
+        <button class="proj-tab" data-id="205113374" onclick="selectProjectTab('205113374')">Global <span class="tab-count"></span></button>
+        <button class="proj-tab" data-id="424097845" onclick="selectProjectTab('424097845')">Bithero <span class="tab-count"></span></button>
+        <button class="proj-tab" data-id="270653299" onclick="selectProjectTab('270653299')">Kripto Web <span class="tab-count"></span></button>
+        <button class="proj-tab" data-id="303634916" onclick="selectProjectTab('303634916')">SSO Kripto <span class="tab-count"></span></button>
+        <button class="proj-tab" data-id="331112787" onclick="selectProjectTab('331112787')">SSO Hisse <span class="tab-count"></span></button>
+        <button class="proj-tab" data-id="306384154" onclick="selectProjectTab('306384154')">SSO Global <span class="tab-count"></span></button>
+      </div>
+      <div class="project-tabs-summary">
+        <div class="tab-total">Toplam &nbsp<span id="allProjectsTotal">0</span></div>
+      </div>
     </div>
     <div class="toolbar" id="toolbar">
       <div class="search-wrap">
@@ -1258,6 +1322,42 @@
         const hasCache = !!localStorage.getItem(getCacheKey(tab.dataset.id));
         tab.classList.toggle('no-cache', !hasCache);
       });
+      updateTabCounts();
+      updateAllProjectsTotal();
+    }
+
+    function updateTabCounts() {
+      document.querySelectorAll('.proj-tab').forEach(tab => {
+        const cache = localStorage.getItem(getCacheKey(tab.dataset.id));
+        const badge = tab.querySelector('.tab-count');
+        if (!badge) return;
+        if (!cache) {
+          badge.textContent = '';
+          return;
+        }
+        try {
+          const meta = JSON.parse(cache).meta;
+          badge.textContent = meta?.totalBranches != null ? `${meta.totalBranches}` : '';
+        } catch {
+          badge.textContent = '';
+        }
+      });
+    }
+
+    function updateAllProjectsTotal() {
+      const badge = document.getElementById('allProjectsTotal');
+      const allTabs = Array.from(document.querySelectorAll('.proj-tab'));
+      const sum = allTabs.reduce((total, tab) => {
+        const cache = localStorage.getItem(getCacheKey(tab.dataset.id));
+        if (!cache) return total;
+        try {
+          const meta = JSON.parse(cache).meta;
+          return total + (meta?.totalBranches || 0);
+        } catch {
+          return total;
+        }
+      }, 0);
+      badge.textContent = `${sum}`;
     }
 
     function initStart() {
@@ -1469,6 +1569,8 @@
             }
             const meta = { totalBranches, totalFiles: files.length, projectCount: 1 };
             localStorage.setItem(getCacheKey(pid), JSON.stringify({ data: newData, meta, savedAt: Date.now() }));
+            updateTabCounts();
+            updateAllProjectsTotal();
             ok = true;
             console.log(`[bg] ${PROJECT_MAP[pid]} tamamlandı (${files.length} dosya, ${totalBranches} branch)`);
           }
