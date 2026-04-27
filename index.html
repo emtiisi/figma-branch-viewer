@@ -639,6 +639,38 @@
       display: flex;
     }
 
+    .project-tabs-indicator {
+      display: none;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      color: var(--accent);
+      font-size: 14px;
+      user-select: none;
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 0 20px rgba(7, 8, 15, 0.35);
+    }
+
+    .project-tabs-indicator.visible {
+      display: inline-flex;
+    }
+
+    .project-tabs-indicator.left {
+      margin-right: -10px;
+      background: linear-gradient(90deg, rgba(7, 8, 15, 0.95), rgba(7, 8, 15, 0.05));
+      border: 1px solid rgba(108, 99, 255, 0.18);
+    }
+
+    .project-tabs-indicator.right {
+      margin-left: -10px;
+      background: linear-gradient(270deg, rgba(7, 8, 15, 0.95), rgba(7, 8, 15, 0.05));
+      border: 1px solid rgba(108, 99, 255, 0.18);
+    }
+
     .project-tabs-summary {
       flex: 0 0 auto;
     }
@@ -684,16 +716,6 @@
       font-family: var(--mono);
       font-size: 10px;
       padding: 0 8px;
-      white-space: nowrap;
-    }
-      background: none;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      cursor: pointer;
-      color: var(--muted);
-      font-family: var(--mono);
-      font-size: 12px;
-      transition: all 0.2s;
       white-space: nowrap;
     }
 
@@ -1191,6 +1213,7 @@
     </div>
 
     <div class="project-tabs-wrap">
+      <div class="project-tabs-indicator left" id="projectTabsIndicatorLeft">←</div>
       <div class="project-tabs" id="projectTabs">
         <button class="proj-tab" data-id="209495921" onclick="selectProjectTab('209495921')">Kripto <span class="tab-count"></span></button>
         <button class="proj-tab" data-id="277372227" onclick="selectProjectTab('277372227')">Hisse <span class="tab-count"></span></button>
@@ -1201,6 +1224,7 @@
         <button class="proj-tab" data-id="331112787" onclick="selectProjectTab('331112787')">SSO Hisse <span class="tab-count"></span></button>
         <button class="proj-tab" data-id="306384154" onclick="selectProjectTab('306384154')">SSO Global <span class="tab-count"></span></button>
       </div>
+      <div class="project-tabs-indicator right" id="projectTabsIndicatorRight">→</div>
       <div class="project-tabs-summary">
         <div class="tab-total">Toplam &nbsp<span id="allProjectsTotal">0</span></div>
       </div>
@@ -1324,6 +1348,7 @@
       });
       updateTabCounts();
       updateAllProjectsTotal();
+      updateTabsScrollIndicator();
     }
 
     function updateTabCounts() {
@@ -1358,6 +1383,27 @@
         }
       }, 0);
       badge.textContent = `${sum}`;
+    }
+
+    function updateTabsScrollIndicator() {
+      const tabs = document.getElementById('projectTabs');
+      const leftIndicator = document.getElementById('projectTabsIndicatorLeft');
+      const rightIndicator = document.getElementById('projectTabsIndicatorRight');
+      if (!tabs || !leftIndicator || !rightIndicator) return;
+      const maxScroll = tabs.scrollWidth - tabs.clientWidth;
+      const hasOverflow = maxScroll > 2;
+      const showLeft = tabs.scrollLeft > 2;
+      const showRight = tabs.scrollLeft < maxScroll - 2;
+      leftIndicator.classList.toggle('visible', hasOverflow && showLeft);
+      rightIndicator.classList.toggle('visible', hasOverflow && showRight);
+    }
+
+    function scrollTabs(direction) {
+      const tabs = document.getElementById('projectTabs');
+      if (!tabs) return;
+      const scrollAmount = tabs.clientWidth * 0.7;
+      const target = direction > 0 ? tabs.scrollLeft + scrollAmount : tabs.scrollLeft - scrollAmount;
+      tabs.scrollTo({ left: target, behavior: 'smooth' });
     }
 
     function initStart() {
@@ -1422,6 +1468,19 @@
         if (token) document.getElementById('token').value = token;
         if (projectId) savedProjectId = projectId;
       }
+      const tabs = document.getElementById('projectTabs');
+      const leftIndicator = document.getElementById('projectTabsIndicatorLeft');
+      const rightIndicator = document.getElementById('projectTabsIndicatorRight');
+      if (tabs) {
+        tabs.addEventListener('scroll', updateTabsScrollIndicator);
+      }
+      if (leftIndicator) {
+        leftIndicator.addEventListener('click', () => scrollTabs(-1));
+      }
+      if (rightIndicator) {
+        rightIndicator.addEventListener('click', () => scrollTabs(1));
+      }
+      window.addEventListener('resize', updateTabsScrollIndicator);
       onProjectChange();
     };
 
