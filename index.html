@@ -1523,10 +1523,10 @@
           projects = [{ id: projectId, name: 'Proje ' + projectId }];
           document.getElementById('projectName').textContent = projectId;
         } else {
-          const pr = await fetch(`https://api.figma.com/v2/teams/${teamId}/folders`, { headers: h });
+          const pr = await fetch(`https://api.figma.com/v1/teams/${teamId}/projects`, { headers: h });
           if (!pr.ok) throw new Error(`Hata ${pr.status} — Token veya Team ID hatalı`);
           const pd = await pr.json();
-          projects = pd.folders || [];
+          projects = pd.projects || [];
           document.getElementById('teamName').textContent = pd.name || 'Workspace';
           document.getElementById('projectName').textContent = 'tüm projeler';
         }
@@ -1535,7 +1535,7 @@
         const allFiles = [];
         for (let pi = 0; pi < projects.length; pi++) {
           const project = projects[pi];
-          const fr = await fetch(`https://api.figma.com/v2/folders/${project.id}/files`, { headers: h });
+          const fr = await fetch(`https://api.figma.com/v1/projects/${project.id}/files`, { headers: h });
           if (!fr.ok) throw new Error(`Proje dosyaları alınamadı (${fr.status})`);
           const fd = await fr.json();
           if (projectId && fd.name) document.getElementById('projectName').textContent = fd.name;
@@ -1596,7 +1596,7 @@
         if (tab) { tab.classList.remove('no-cache'); tab.classList.add('loading'); tab.style.setProperty('--bp', '0%'); }
         let ok = false;
         try {
-          const fr = await fetch(`https://api.figma.com/v2/folders/${pid}/files`, { headers: h });
+          const fr = await fetch(`https://api.figma.com/v1/projects/${pid}/files`, { headers: h });
           if (!fr.ok) { console.warn(`[bg] ${pid} files: ${fr.status}`); }
           else {
             const fd = await fr.json();
