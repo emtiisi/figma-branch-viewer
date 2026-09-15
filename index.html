@@ -1511,6 +1511,21 @@
       await doFetch(token, teamId);
     }
 
+    async function isInvalidTokenError(response) {
+      try {
+        const data = await response.clone().json();
+        const text = String(data.err || data.message || '');
+        return /invalid token/i.test(text);
+      } catch {
+        return false;
+      }
+    }
+
+    function handleInvalidToken() {
+      showError('Token geçersiz veya süresi dolmuş. Çıkış yapıldı, lütfen yeni bir token girin.');
+      clearSettings();
+    }
+
     async function doFetch(token, teamId) {
       isFetching = true;
       const projectId = savedProjectId;
@@ -1524,7 +1539,10 @@
           document.getElementById('projectName').textContent = projectId;
         } else {
           const pr = await fetch(`https://api.figma.com/v2/teams/${teamId}/folders`, { headers: h });
-          if (!pr.ok) throw new Error(`Hata ${pr.status} — Token veya Team ID hatalı`);
+          if (!pr.ok) {
+            if (await isInvalidTokenError(pr)) { handleInvalidToken(); return; }
+            throw new Error(`Hata ${pr.status} — Token veya Team ID hatalı`);
+          }
           const pd = await pr.json();
           projects = pd.folders || [];
           document.getElementById('teamName').textContent = pd.name || 'Workspace';
@@ -1536,7 +1554,10 @@
         for (let pi = 0; pi < projects.length; pi++) {
           const project = projects[pi];
           const fr = await fetch(`https://api.figma.com/v2/folders/${project.id}/files`, { headers: h });
-          if (!fr.ok) throw new Error(`Proje dosyaları alınamadı (${fr.status})`);
+          if (!fr.ok) {
+            if (await isInvalidTokenError(fr)) { handleInvalidToken(); return; }
+            throw new Error(`Proje dosyaları alınamadı (${fr.status})`);
+          }
           const fd = await fr.json();
           if (projectId && fd.name) document.getElementById('projectName').textContent = fd.name;
           const files = fd.files || [];
@@ -1597,7 +1618,10 @@
         let ok = false;
         try {
           const fr = await fetch(`https://api.figma.com/v2/folders/${pid}/files`, { headers: h });
-          if (!fr.ok) { console.warn(`[bg] ${pid} files: ${fr.status}`); }
+          if (!fr.ok) {
+            if (await isInvalidTokenError(fr)) { handleInvalidToken(); return; }
+            console.warn(`[bg] ${pid} files: ${fr.status}`);
+          }
           else {
             const fd = await fr.json();
             const files = fd.files || [];
